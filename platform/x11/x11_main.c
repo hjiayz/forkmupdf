@@ -107,7 +107,6 @@ static int advance_scheduled = 0;
 static struct timeval tmo;
 static struct timeval tmo_advance;
 static struct timeval tmo_at;
-
 /*
  * Dialog boxes
  */
@@ -801,6 +800,9 @@ static void usage(void)
 	fprintf(stderr, "\t-p -\tpassword\n");
 	fprintf(stderr, "\t-r -\tresolution\n");
 	fprintf(stderr, "\t-A -\tset anti-aliasing quality in bits (0=off, 8=best)\n");
+        fprintf(stderr, "\t-f -\tfullscreen\n");
+	fprintf(stderr, "\t-w -\tfullscreen ,zoom to fit window width\n");
+        fprintf(stderr, "\t-h -\tfullscreen ,zoom to fit window heigth\n");
 	fprintf(stderr, "\t-C -\tRRGGBB (tint color in hexadecimal syntax)\n");
 	fprintf(stderr, "\t-W -\tpage width for EPUB layout\n");
 	fprintf(stderr, "\t-H -\tpage height for EPUB layout\n");
@@ -825,6 +827,9 @@ int main(int argc, char **argv)
 	struct timeval now;
 	struct timeval *timeout;
 	struct timeval tmo_advance_delay;
+	int fullscreen = 0;
+	int fullscreenw = 0;
+	int fullscreenh = 0;
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
@@ -835,7 +840,7 @@ int main(int argc, char **argv)
 
 	pdfapp_init(ctx, &gapp);
 
-	while ((c = fz_getopt(argc, argv, "p:r:A:C:W:H:S:")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:r:f:w:h:A:C:W:H:S:")) != -1)
 	{
 		switch (c)
 		{
@@ -848,6 +853,9 @@ int main(int argc, char **argv)
 			break;
 		case 'p': password = fz_optarg; break;
 		case 'r': resolution = atoi(fz_optarg); break;
+		case 'f': fullscreen = 1;fz_optind--; break;
+		case 'w': fullscreen = 1;fullscreenw = 1;fz_optind--;break;
+		case 'h': fullscreen = 1;fullscreenh = 1;fz_optind--;break;
 		case 'A': fz_set_aa_level(ctx, atoi(fz_optarg)); break;
 		case 'W': gapp.layout_w = fz_atof(fz_optarg); break;
 		case 'H': gapp.layout_h = fz_atof(fz_optarg); break;
@@ -878,6 +886,7 @@ int main(int argc, char **argv)
 	gapp.scrh = DisplayHeight(xdpy, xscr);
 	gapp.resolution = resolution;
 	gapp.pageno = pageno;
+	gapp.fullscreen=fullscreen;
 
 	tmo_at.tv_sec = 0;
 	tmo_at.tv_usec = 0;
@@ -886,6 +895,12 @@ int main(int argc, char **argv)
 	pdfapp_open(&gapp, filename, 0);
 
 	FD_ZERO(&fds);
+	if (fullscreenw) {
+		pdfapp_autozoom_horizontal(&gapp);
+	}
+        if (fullscreenh) {
+                pdfapp_autozoom_vertical(&gapp);
+        }
 
 	signal(SIGHUP, signal_handler);
 
@@ -952,6 +967,12 @@ int main(int argc, char **argv)
 					onkey(buf[0], xevt.xkey.state);
 
 				onmouse(oldx, oldy, 0, 0, 0);
+			        if (fullscreenw) {
+			                pdfapp_autozoom_horizontal(&gapp);
+			        }
+			        if (fullscreenh) {
+			                pdfapp_autozoom_vertical(&gapp);
+			        }
 
 				break;
 

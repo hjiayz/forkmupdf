@@ -11,7 +11,6 @@
 #ifndef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
-
 enum panning
 {
 	DONT_PAN = 0,
@@ -446,10 +445,12 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int bps)
 		app->resolution = MINRES;
 	if (app->resolution > MAXRES)
 		app->resolution = MAXRES;
-
 	if (!reload)
 	{
 		app->shrinkwrap = 1;
+		if (app->fullscreen) {
+			app->shrinkwrap = 0;
+		}
 		app->rotate = 0;
 		app->panx = 0;
 		app->pany = 0;
@@ -966,9 +967,15 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			if (w != app->winw || h != app->winh)
 				winresize(app, w, h);
 		}
-
+		else {
+			if (app->fullscreen) {
+				if (!app->winh){
+					winresize(app,app->scrw,app->scrh);
+				}
+				winfullscreen(app,1);
+			}
+		}
 		winrepaint(app);
-
 		wincursor(app, ARROW);
 	}
 
@@ -1084,6 +1091,8 @@ void pdfapp_onresize(pdfapp_t *app, int w, int h)
 void pdfapp_autozoom_vertical(pdfapp_t *app)
 {
 	app->resolution *= (double) app->winh / (double) fz_pixmap_height(app->ctx, app->image);
+	
+
 	if (app->resolution > MAXRES)
 		app->resolution = MAXRES;
 	else if (app->resolution < MINRES)
