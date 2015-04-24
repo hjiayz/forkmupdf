@@ -466,3 +466,8 @@ ifeq "$(HAVE_X11)" "yes"
 X11_CFLAGS := $(SYS_X11_CFLAGS)
 X11_LIBS := $(SYS_X11_LIBS)
 endif
+
+# --- sqlite ---
+
+SQLITE_CFLAGS := $(SYS_SQLITE_CFLAGS)
+SQLITE_LIBS := $(SYS_SQLITE_LIBS)

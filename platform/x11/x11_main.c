@@ -107,6 +107,74 @@ static int advance_scheduled = 0;
 static struct timeval tmo;
 static struct timeval tmo_advance;
 static struct timeval tmo_at;
+char* configFile;
+#include <pwd.h>
+char *getConfigFile(){
+	char * home=getpwuid(getuid())->pw_dir;
+	char * file=malloc(sizeof(char)*(strlen(home)+8));
+	sprintf(file,"%s/.mupdf",home);
+	return file;
+}
+#include <sqlite3.h>
+int loadLastNo(char *filename){
+        int ret = 0;
+        sqlite3 *db = 0;
+        char *errmsg = NULL;
+        ret = sqlite3_open(configFile,&db);
+        if(ret != SQLITE_OK){
+                fprintf(stderr,"Cannot open db: %s\n",sqlite3_errmsg(db));
+                return 1;
+        }
+        ret = sqlite3_exec(db,"create table if not exists config(k TEXT primary key,v int)",NULL,NULL,&errmsg);
+        if(ret != SQLITE_OK){
+                fprintf(stderr,"create table fail: %s\n",errmsg);
+                sqlite3_free(errmsg);
+                sqlite3_close(db);
+                return 1;
+        }
+        int pageno=1;
+        sqlite3_stmt *stmt;
+        sqlite3_prepare_v2(db,"select v from config where k = ?",-1,&stmt,0);
+        sqlite3_bind_text(stmt,1,filename,strlen(filename),NULL);
+        ret=sqlite3_step(stmt);
+        if(ret == SQLITE_ROW){
+                pageno=sqlite3_column_int(stmt,0);
+        }
+        sqlite3_finalize(stmt);
+        sqlite3_free(errmsg);
+        sqlite3_close(db);
+        return pageno;
+
+}
+
+void saveLastNo(pdfapp_t *app,char * filename){
+        int pageno=app->pageno;
+        int ret = 0;
+        sqlite3 *db = 0;
+        char *errmsg = NULL;
+        ret = sqlite3_open(configFile,&db);
+        if(ret != SQLITE_OK){
+                fprintf(stderr,"Cannot open db: %s\n",sqlite3_errmsg(db));
+                return;
+        }
+        ret = sqlite3_exec(db,"create table if not exists config(k TEXT primary key,v int)",NULL,NULL,&errmsg);
+        if(ret != SQLITE_OK){
+                fprintf(stderr,"create table fail: %s\n",errmsg);
+                sqlite3_free(errmsg);
+                sqlite3_close(db);
+                return;
+        }
+        sqlite3_stmt *stmt;
+        sqlite3_prepare_v2(db,"replace into config (k,v) VALUES( ? , ? );",-1,&stmt,0);
+        sqlite3_bind_text(stmt,1,filename,strlen(filename),NULL);
+        sqlite3_bind_int(stmt,2,pageno);
+        ret=sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+        sqlite3_free(errmsg);
+        sqlite3_close(db);
+}
+
+
 /*
  * Dialog boxes
  */
@@ -830,7 +898,7 @@ int main(int argc, char **argv)
 	int fullscreen = 0;
 	int fullscreenw = 0;
 	int fullscreenh = 0;
-
+	configFile=getConfigFile();
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
 	{
@@ -871,7 +939,8 @@ int main(int argc, char **argv)
 
 	if (argc - fz_optind == 1)
 		pageno = atoi(argv[fz_optind++]);
-
+	else
+		pageno = loadLastNo(filename);
 	winopen();
 
 	if (resolution == -1)
@@ -1113,7 +1182,8 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-
+	free(configFile);
+	saveLastNo(&gapp,filename);
 	cleanup(&gapp);
 
 	return 0;

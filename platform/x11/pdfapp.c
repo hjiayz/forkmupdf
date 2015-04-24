@@ -458,7 +458,6 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int bps)
 
 	pdfapp_showpage(app, 1, 1, 1, 0, 0);
 }
-
 void pdfapp_close(pdfapp_t *app)
 {
 	fz_drop_display_list(app->ctx, app->page_list);
@@ -1090,23 +1089,25 @@ void pdfapp_onresize(pdfapp_t *app, int w, int h)
 
 void pdfapp_autozoom_vertical(pdfapp_t *app)
 {
-	app->resolution *= (double) app->winh / (double) fz_pixmap_height(app->ctx, app->image);
-	
-
+	double proportionality = (double) app->winh / (double) fz_pixmap_height(app->ctx, app->image);
+	app->resolution *= proportionality;
 	if (app->resolution > MAXRES)
 		app->resolution = MAXRES;
 	else if (app->resolution < MINRES)
 		app->resolution = MINRES;
+	if ((int)(proportionality*100)==100) {return;}
 	pdfapp_showpage(app, 0, 1, 1, 0, 0);
 }
 
 void pdfapp_autozoom_horizontal(pdfapp_t *app)
 {
-	app->resolution *= (double) app->winw / (double) fz_pixmap_width(app->ctx, app->image);
+	double proportionality = (double) app->winw / (double) fz_pixmap_width(app->ctx, app->image);
+	app->resolution *= proportionality;
 	if (app->resolution > MAXRES)
 		app->resolution = MAXRES;
 	else if (app->resolution < MINRES)
 		app->resolution = MINRES;
+        if ((int)(proportionality*100)==100) {return;}
 	pdfapp_showpage(app, 0, 1, 1, 0, 0);
 }
 

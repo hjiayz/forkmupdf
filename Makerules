@@ -83,6 +83,11 @@ SYS_ZLIB_LIBS = -lz
 
 endif
 
+ifeq "$(shell pkg-config --exists sqlite3 && echo yes)" "yes"
+SYS_SQLITE_CFLAGS = $(shell pkg-config --cflags sqlite3)
+SYS_SQLITE_LIBS = $(shell pkg-config --libs sqlite3)
+endif
+
 # The following section is an example of how to simply do cross-compilation
 # using these Makefiles. It builds for a beagleboard running ARM linux,
 # compiling on windows with the CodeSourcery G++ compilers.
