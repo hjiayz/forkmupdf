@@ -1171,8 +1171,8 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	free(configFile);
 	saveLastNo(&gapp,filename);
+	free(configFile);
 	cleanup(&gapp);
 
 	return 0;
