@@ -47,6 +47,8 @@ extern void winreloadpage(pdfapp_t *);
 
 struct pdfapp_s
 {
+	int fullscreenw;
+	int fullscreenh;
 	/* current document params */
 	fz_document *doc;
 	char *docpath;

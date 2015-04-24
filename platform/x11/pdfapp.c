@@ -859,7 +859,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 	}
 
 	if (loadpage)
-	{
+	{	
+
 		pdfapp_loadpage(app, searching);
 
 		/* Zero search hit position */
@@ -876,6 +877,26 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			fz_drop_device(app->ctx, tdev);
 		}
 	}
+        if (app->fullscreenw) {
+                double pwidth;
+                if (app->image==NULL) {
+                        pwidth=app->layout_w;
+                }
+                else {
+                        pwidth=(double) fz_pixmap_width(app->ctx, app->image);
+                }
+                app->resolution *= (double) app->scrw / pwidth;
+        }
+        if (app->fullscreenh) {
+                double pheight;
+                if (app->image==NULL) {
+                        pheight=app->layout_h;
+                }
+                else {
+                        pheight=(double) fz_pixmap_height(app->ctx, app->image);
+                }
+                app->resolution *= (double) app->scrh / pheight;
+        }
 
 	if (drawpage)
 	{
@@ -946,6 +967,26 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		}
 		app->start_time = clock();
 	}
+	if (app->fullscreenw) {
+        	double pwidth;
+                if (app->image==NULL) {
+                	pwidth=app->layout_w;
+                }
+                else {
+                        pwidth=(double) fz_pixmap_width(app->ctx, app->image);
+                }
+                app->resolution *= (double) app->scrw / pwidth;
+	}
+        if (app->fullscreenh) {
+        	double pheight;
+        	if (app->image==NULL) {
+                        pheight=app->layout_h;
+                }
+                else {
+                        pheight=(double) fz_pixmap_height(app->ctx, app->image);
+                }
+                app->resolution *= (double) app->scrh / pheight;
+        }
 
 	if (repaint)
 	{

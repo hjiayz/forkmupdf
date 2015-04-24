@@ -956,7 +956,8 @@ int main(int argc, char **argv)
 	gapp.resolution = resolution;
 	gapp.pageno = pageno;
 	gapp.fullscreen=fullscreen;
-
+	gapp.fullscreenw=fullscreenw;
+	gapp.fullscreenh=fullscreenh;
 	tmo_at.tv_sec = 0;
 	tmo_at.tv_usec = 0;
 	timeout = NULL;
@@ -964,12 +965,6 @@ int main(int argc, char **argv)
 	pdfapp_open(&gapp, filename, 0);
 
 	FD_ZERO(&fds);
-	if (fullscreenw) {
-		pdfapp_autozoom_horizontal(&gapp);
-	}
-        if (fullscreenh) {
-                pdfapp_autozoom_vertical(&gapp);
-        }
 
 	signal(SIGHUP, signal_handler);
 
@@ -1036,12 +1031,6 @@ int main(int argc, char **argv)
 					onkey(buf[0], xevt.xkey.state);
 
 				onmouse(oldx, oldy, 0, 0, 0);
-			        if (fullscreenw) {
-			                pdfapp_autozoom_horizontal(&gapp);
-			        }
-			        if (fullscreenh) {
-			                pdfapp_autozoom_vertical(&gapp);
-			        }
 
 				break;
 
