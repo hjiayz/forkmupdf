@@ -868,7 +868,6 @@ static void usage(void)
 	fprintf(stderr, "\t-p -\tpassword\n");
 	fprintf(stderr, "\t-r -\tresolution\n");
 	fprintf(stderr, "\t-A -\tset anti-aliasing quality in bits (0=off, 8=best)\n");
-        fprintf(stderr, "\t-f -\tfullscreen\n");
 	fprintf(stderr, "\t-w -\tfullscreen ,zoom to fit window width\n");
         fprintf(stderr, "\t-h -\tfullscreen ,zoom to fit window heigth\n");
 	fprintf(stderr, "\t-C -\tRRGGBB (tint color in hexadecimal syntax)\n");
@@ -895,7 +894,6 @@ int main(int argc, char **argv)
 	struct timeval now;
 	struct timeval *timeout;
 	struct timeval tmo_advance_delay;
-	int fullscreen = 0;
 	int fullscreenw = 0;
 	int fullscreenh = 0;
 	configFile=getConfigFile();
@@ -921,9 +919,8 @@ int main(int argc, char **argv)
 			break;
 		case 'p': password = fz_optarg; break;
 		case 'r': resolution = atoi(fz_optarg); break;
-		case 'f': fullscreen = 1;fz_optind--; break;
-		case 'w': fullscreen = 1;fullscreenw = 1;fz_optind--;break;
-		case 'h': fullscreen = 1;fullscreenh = 1;fz_optind--;break;
+		case 'w': fullscreenw = 1;fz_optind--;break;
+		case 'h': fullscreenh = 1;fz_optind--;break;
 		case 'A': fz_set_aa_level(ctx, atoi(fz_optarg)); break;
 		case 'W': gapp.layout_w = fz_atof(fz_optarg); break;
 		case 'H': gapp.layout_h = fz_atof(fz_optarg); break;
@@ -955,7 +952,6 @@ int main(int argc, char **argv)
 	gapp.scrh = DisplayHeight(xdpy, xscr);
 	gapp.resolution = resolution;
 	gapp.pageno = pageno;
-	gapp.fullscreen=fullscreen;
 	gapp.fullscreenw=fullscreenw;
 	gapp.fullscreenh=fullscreenh;
 	tmo_at.tv_sec = 0;

@@ -448,7 +448,7 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int bps)
 	if (!reload)
 	{
 		app->shrinkwrap = 1;
-		if (app->fullscreen) {
+		if ((app->fullscreenw)||(app->fullscreenh)) {
 			app->shrinkwrap = 0;
 		}
 		app->rotate = 0;
@@ -837,6 +837,7 @@ void pdfapp_reloadpage(pdfapp_t *app)
 
 static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repaint, int transition, int searching)
 {
+	int reflush=0;
 	char buf[MAX_TITLE];
 	fz_device *idev;
 	fz_device *tdev;
@@ -877,27 +878,6 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			fz_drop_device(app->ctx, tdev);
 		}
 	}
-        if (app->fullscreenw) {
-                double pwidth;
-                if (app->image==NULL) {
-                        pwidth=app->layout_w;
-                }
-                else {
-                        pwidth=(double) fz_pixmap_width(app->ctx, app->image);
-                }
-                app->resolution *= (double) app->scrw / pwidth;
-        }
-        if (app->fullscreenh) {
-                double pheight;
-                if (app->image==NULL) {
-                        pheight=app->layout_h;
-                }
-                else {
-                        pheight=(double) fz_pixmap_height(app->ctx, app->image);
-                }
-                app->resolution *= (double) app->scrh / pheight;
-        }
-
 	if (drawpage)
 	{
 		char buf2[64];
@@ -916,8 +896,9 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			sprintf(buf, "%s%s", app->doctitle, buf2);
 		wintitle(app, buf);
 
+
 		pdfapp_viewctm(&ctm, app);
-		bounds = app->page_bbox;
+                bounds = app->page_bbox;
 		fz_round_rect(&ibounds, fz_transform_rect(&bounds, &ctm));
 		fz_rect_from_irect(&bounds, &ibounds);
 
@@ -967,27 +948,6 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		}
 		app->start_time = clock();
 	}
-	if (app->fullscreenw) {
-        	double pwidth;
-                if (app->image==NULL) {
-                	pwidth=app->layout_w;
-                }
-                else {
-                        pwidth=(double) fz_pixmap_width(app->ctx, app->image);
-                }
-                app->resolution *= (double) app->scrw / pwidth;
-	}
-        if (app->fullscreenh) {
-        	double pheight;
-        	if (app->image==NULL) {
-                        pheight=app->layout_h;
-                }
-                else {
-                        pheight=(double) fz_pixmap_height(app->ctx, app->image);
-                }
-                app->resolution *= (double) app->scrh / pheight;
-        }
-
 	if (repaint)
 	{
 		pdfapp_panview(app, app->panx, app->pany);
@@ -1007,13 +967,17 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			if (w != app->winw || h != app->winh)
 				winresize(app, w, h);
 		}
-		else {
-			if (app->fullscreen) {
-				if (!app->winh){
-					winresize(app,app->scrw,app->scrh);
-				}
-				winfullscreen(app,1);
-			}
+		else 
+		{
+                	if ((app->fullscreenw||app->fullscreenh)&&(!app->fullscreen)) 
+			{
+	                        if (!app->winh)
+        	                        winresize(app,app->scrw,app->scrh);
+	                        winfullscreen(app,1);
+				app->fullscreen=1;
+				reflush=1;
+                	}
+   
 		}
 		winrepaint(app);
 		wincursor(app, ARROW);
@@ -1026,6 +990,31 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 	}
 
 	fz_flush_warnings(app->ctx);
+
+
+                if (app->fullscreenw)
+                {
+			
+                        int newresolution =(int)(app->resolution * (double) app->scrw/(double) fz_pixmap_width(app->ctx, app->image));
+			if (newresolution!=app->resolution)
+                        {
+                                app->resolution = newresolution;
+                                reflush=1;
+                        }
+                }
+                if (app->fullscreenh)
+                {
+                        int newresolution = (int)(app->resolution * (double) app->scrh/(double) fz_pixmap_height(app->ctx, app->image));
+                        if (newresolution!=app->resolution)
+                        {
+                                app->resolution = newresolution;
+                                reflush=1;
+                        }
+                }
+	
+	if (reflush) {
+		pdfapp_showpage(app, loadpage, drawpage, repaint, transition, searching);
+	}
 }
 
 static void pdfapp_gotouri(pdfapp_t *app, char *uri)
@@ -1301,6 +1290,7 @@ void pdfapp_onkey(pdfapp_t *app, int c, int modifiers)
 		app->shrinkwrap = 0;
 		winfullscreen(app, !app->fullscreen);
 		app->fullscreen = !app->fullscreen;
+
 		break;
 
 	case 'w':
