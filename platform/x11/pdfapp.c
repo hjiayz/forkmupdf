@@ -992,25 +992,25 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 	fz_flush_warnings(app->ctx);
 
 
-                if (app->fullscreenw)
+        if (app->fullscreenw)
+        {
+		
+                int newresolution =(int)(app->resolution * (double) app->scrw/(double) fz_pixmap_width(app->ctx, app->image));
+		if (newresolution!=app->resolution)
                 {
-			
-                        int newresolution =(int)(app->resolution * (double) app->scrw/(double) fz_pixmap_width(app->ctx, app->image));
-			if (newresolution!=app->resolution)
-                        {
-                                app->resolution = newresolution;
-                                reflush=1;
-                        }
+                        app->resolution = newresolution;
+                        reflush=1;
                 }
-                if (app->fullscreenh)
+        }
+        if (app->fullscreenh)
+        {
+                int newresolution = (int)(app->resolution * (double) app->scrh/(double) fz_pixmap_height(app->ctx, app->image));
+                if (newresolution!=app->resolution)
                 {
-                        int newresolution = (int)(app->resolution * (double) app->scrh/(double) fz_pixmap_height(app->ctx, app->image));
-                        if (newresolution!=app->resolution)
-                        {
-                                app->resolution = newresolution;
-                                reflush=1;
-                        }
+                        app->resolution = newresolution;
+                        reflush=1;
                 }
+        }
 	
 	if (reflush) {
 		pdfapp_showpage(app, loadpage, drawpage, repaint, transition, searching);
